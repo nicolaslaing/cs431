@@ -59,5 +59,6 @@ $_SESSION["cur_balance"] = $row["cur_balance"];
 $message = "<fieldset id='show' style='display: none'><p class='win'>" . session_id() . "<br /><br />Logged in. Transferring to formpage.php</p></fieldset><img src='corgi.jpg' class='image'>";
 $target = "formpage.php"; // direct to PHP page to deposit/withdraw/show/mail
 redirect($message, $target, $delay+1);
+/////
 ?>
 <!-- Code by Nicolas Andrew Laing (11/20/17) -->
