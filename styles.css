@@ -1,0 +1,32 @@
+/*BONUS: CSS class attributes for success login color*/
+.win {
+	font-size: 150%;
+	color: green;
+	text-align: center;
+	margin: auto;
+}
+/*BONUS: CSS class attributes for fail login color*/
+.lose {
+	font-size: 150%;
+	color: red;
+	text-align: center;
+	margin: auto;
+}
+.stnrd {
+	background-color: tomato;
+	font-weight: bold;
+	text-align: center;
+}
+.image {
+	margin: auto
+	margin-top:50%;
+}
+#fieldset {
+	width: 20%;
+	margin: auto;
+	text-align: center;
+}
+h1 {
+	text-align: center;
+}
+/* Code by Nicolas Andrew Laing (11/20/17) */
