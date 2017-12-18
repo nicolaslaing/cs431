@@ -16,9 +16,9 @@ ini_set('display_errors' , 1);
 
 include("account431.php");
 
-$db = mysqli_connect($host, $user, $password, $project);
+//$db = mysqli_connect($host, $user, $pass, $project);
 
-mysqli_select_db($db, $project ); 
+//mysqli_select_db($db, $project); 
 //****************************************************************************************
 // AUTHORIZATION
 function auth($user, $pass, &$result){
@@ -26,9 +26,9 @@ function auth($user, $pass, &$result){
 	$hash = sha1($pass);
 	
 	$s = "select * from A where user='$user' and pass='$pass' and hash='$hash'";
-	($result = mysqli_query($db,$s)) or die(mysqli_error());
+	$result = odbc_exec($db, $s);
 	
-	$numRows = mysqli_num_rows($result);
+	$numRows = odbc_num_rows($result);
 	
 	print "<p id='auth' style='text-align: center; font-size: 150%'>Authenticating...</p><br />";
 	if($numRows != 0){
@@ -75,7 +75,7 @@ function getdata($name, &$result){
 		return;
 	}
 	$temp = $n;
-	$temp = mysqli_real_escape_string($db, $temp);
+	$temp = addslashes($temp);
 	$result = $temp;
 	return $result;
 ;}
@@ -85,7 +85,8 @@ function deposit ($user, $amount){
 	global $db;
 	
 	$s = "select * from A where user='$user'";
-	$result = mysqli_query($db,$s);
+	//$result = mysqli_query($db,$s);
+	$result = odbc_exec($db,$s);
 	$bal = $_SESSION["cur_balance"];
 	$newbal = $bal + $amount;
 	
@@ -94,14 +95,17 @@ function deposit ($user, $amount){
 	}
 	
 	$up = "UPDATE A SET `init_balance` = $bal WHERE user='$user'"; 
-	mysqli_query($db, $up);
+	//mysqli_query($db, $up);
+	odbc_exec($db, $up);
 	
 	$up = "UPDATE A SET `cur_balance` = $newbal WHERE user='$user'";
-	mysqli_query($db, $up);
+	//mysqli_query($db, $up);
+	odbc_exec($db, $up);
 
 	
 	$i = "INSERT INTO T VALUES('$user', 'D', $amount, NOW())";
-	mysqli_query($db, $i);
+	//mysqli_query($db, $i);
+	odbc_exec($db, $i);
 	
 	//update session
 	$_SESSION["cur_balance"] = $_SESSION["cur_balance"] + $amount;
@@ -115,7 +119,8 @@ function withdraw ($user, $amount){
 	global $db;
 
 	$s = "select * from A where user='$user'";
-	$result = mysqli_query($db, $s);
+	//$result = mysqli_query($db, $s);
+	$result = odbc_exec($db, $s);
 	$bal = $_SESSION["cur_balance"];
 	$newbal = $bal - $amount;
 	
@@ -137,13 +142,16 @@ function withdraw ($user, $amount){
 	}
 	else{
 		$up = "UPDATE A SET `init_balance` = $bal WHERE user='$user'";
-		mysqli_query($db, $up);
+		//mysqli_query($db, $up);
+		odbc_exec($db, $up);
 		
 		$up = "UPDATE A SET `cur_balance` = $newbal WHERE user='$user'";
-		mysqli_query($db, $up);
+		//mysqli_query($db, $up);
+		odbc_exec($db, $up);
 	
 		$i = "INSERT INTO T VALUES('$user', 'W', $amount, NOW())";
-		mysqli_query($db, $i);
+		//mysqli_query($db, $i);
+		odbc_exec($db, $i);
 		
 		//update session
 		$_SESSION["cur_balance"] = $_SESSION["cur_balance"] - $amount;
@@ -159,27 +167,36 @@ function show($user, &$out){
 	
 	$tableA = "select * from A where user='$user'";
 	$out = "<br /><br />SQL statement is:<br />$tableA<br /><br />";
-	($a = mysqli_query($db, $tableA)) or die(mysqli_error($db));
+	//$a = mysqli_query($db, $tableA);
+	$a = odbc_exec($db, $tableA);
 	
 	$tableT = "select * from T where user='$user' order by date DESC"; 
-	($t = mysqli_query($db, $tableT)) or die(mysqli_error($db));
+	//$t = mysqli_query($db, $tableT);
+	$t = odbc_exec($db, $tableT);
 	
-	while ($row = mysqli_fetch_array($a, MYSQLI_ASSOC)){
-		$cell = $row["user"];
-		$mail = $row["mail"];
-		$addr = $row["address"];
-		$phone = $row["cell"];
+	//while ($row = mysqli_fetch_array($t, MYSQLI_ASSOC)){
+		//$cell = $row["user"];
+		$cell = odbc_result($a, "user");
+		//$mail = $row["mail"];
+		$mail = odbc_result($a, "mail");
+		//$addr = $row["address"];
+		$addr = odbc_result($a, "address");
+		//$phone = $row["cell"];
+		$phone = odbc_result($a, "cell");
 		
 		// Set init_balance and cur_balance to ZERO if there are no transactions for the user (Useful when deleting rows from DB)
 		// MUST LOG OUT TO SEE cur_balance AFFECTED
-		$numrowT = mysqli_num_rows($t);
+		$numrowT = odbc_num_rows($t);
 		if($numrowT <= 0){
 			$s = "UPDATE A SET `init_balance` = 0.00,`cur_balance` = 0.00 WHERE user='$user'";
-			(mysqli_query($db, $s)) or die(mysqli_error($db));
+			//(mysqli_query($db, $s)) or die(mysqli_error($db));
+			odbc_exec($db, $s);
 		}
 		
-		$initBal = $row["init_balance"];
-		$bal  = $row["cur_balance"];
+		//$initBal = $row["init_balance"];
+		$initBal = odbc_result($a, "init_balance");
+		//$bal  = $row["cur_balance"];
+		$bal = odbc_result($a, "cur_balance");
 		
 		print "<br /><br /><font size='5'>Account Summary</font>";
 		$out .= "User is $cell<br />";
@@ -188,18 +205,21 @@ function show($user, &$out){
 		$out .= "Cellphone: $phone<br />";
 		$out .= "Initial Balance: \$$initBal<br />";
 		$out .= "Current Balance: \$$bal<br /><br />";
-	};
-	
-	while ($row = mysqli_fetch_array($t, MYSQLI_ASSOC)){
 
-		$type  = $row[ "type" ];
-		$amount  = $row[ "amount" ];
-		$date  = $row[ "date" ];
+	
+	while ($row = odbc_fetch_array($t)){
+
+		//$type  = $row[ "type" ];
+		$type = odbc_result($t, "type");
+		//$amount  = $row[ "amount" ];
+		$amount = odbc_result($t, "amount");
+		//$date  = $row[ "date" ];
+		$date = odbc_result($t, "date");
 		
 		$out .= "Type is $type<br />";
 		$out .= "Amount is \$$amount<br />";
 		$out .= "Date is $date<br /><br />";
-	};
+	}
 	echo $out;
 ;}
 //****************************************************************************************
@@ -210,10 +230,11 @@ function mailer($user, $out){
 	date_default_timezone_set ("America/New_York");
 	
 	$tableSel = "select * from A where user='$user'";
-	($t = mysqli_query($db, $tableSel));
+	$t = odbc_exec($db, $tableSel);
 	
-	while ( $row = mysqli_fetch_array($t, MYSQLI_ASSOC) ) {
-		$email  = $row[ "mail" ];
+	//while ( $row = mysqli_fetch_array($t, MYSQLI_ASSOC) ) {
+		//$email  = $row[ "mail" ];
+		$email = odbc_result($t, "mail");
 		$subject = $_GET["subject"] . " (" . date("Y-m-d G:i:s") . ")";
 		$out = "Message from HTML:<br />";
 		$out .= $_GET["message"];
@@ -221,7 +242,7 @@ function mailer($user, $out){
 		mail($email, $subject, $out);
 			
 		print "Email Sent.";
-	}
+	
 ;}
 ?>
 <!-- Code by Nicolas Andrew Laing (11/20/17) -->
