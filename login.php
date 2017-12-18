@@ -22,7 +22,7 @@ ini_set('display_errors' , 1);
 include ("account431.php");
 include ("functions.php");
 
-$db = odbc_connect($connection, $user, $pass);
+//$db = mysqli_connect($host, $user, $pass, $project);
 
 if (mysqli_connect_errno())
   {
@@ -31,7 +31,7 @@ if (mysqli_connect_errno())
   }
 print "<h1 class='stnrd'>Successfully connected to MySQL.</h1><br /><br />";
 
-mysqli_select_db($db, $project ); 
+//mysqli_select_db($db, $project ); 
 //****************************************************************************************
 // GLOBALS
 $bad = false;
@@ -44,7 +44,7 @@ if($bad){
 	exit("UNDEFINED/EMPTY ERROR");
 }
 if(!auth($user, $pass, $result)){
-																	// BONUS: Class attribute
+																	
 	$message = "<fieldset id='show' style='display: none'><p id='fieldset' class='lose'>Please enter a valid username or password.</p></fieldset><img src='corgi.jpg' class='image'>";
 	$target = "index.html";
 	redirect($message, $target, $delay+1);
@@ -53,9 +53,10 @@ if(!auth($user, $pass, $result)){
 $_SESSION["logged"] = true;
 $_SESSION["user"] = $user;
 
-$row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-$_SESSION["cur_balance"] = $row["cur_balance"];
-												// BONUS: Class attribute
+$_SESSION["cur_balance"] = odbc_result($result, "cur_balance");
+//$row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+//$_SESSION["cur_balance"] = $row["cur_balance"];
+												
 $message = "<fieldset id='show' style='display: none'><p class='win'>" . session_id() . "<br /><br />Logged in. Transferring to formpage.php</p></fieldset><img src='corgi.jpg' class='image'>";
 $target = "formpage.php"; // direct to PHP page to deposit/withdraw/show/mail
 redirect($message, $target, $delay+1);
